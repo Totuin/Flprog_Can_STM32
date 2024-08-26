@@ -910,37 +910,65 @@ void FLProgCanBus::init()
 {
     begin(_retransmission);
     setBaudRate(_baud);
+    privateSetMode();
     _isInit = true;
 }
 
 void FLProgCanBus::baudRate(uint32_t baud)
 {
+    if (baud < 10000)
+    {
+        return;
+    }
+    if (baud > 1000000)
+    {
+        return;
+    }
+    if (baud == _baud)
+    {
+        return;
+    }
     _baud = baud;
+    setBaudRate(_baud);
 }
 
 void FLProgCanBus::mode(uint8_t mode)
 {
+    if (mode > 3)
+    {
+        return;
+    }
+    if (mode == _mode)
+    {
+        return;
+    }
     _mode = mode;
+    privateSetMode();
 }
 
 void FLProgCanBus::privateSetMode()
 {
+
     if (_mode == FLPROG_CAN_BUS_LOOPBACK_MODE)
     {
-        enableLoopBack();
+        enableLoopBack(true);
+        begin(_retransmission);
         return;
     }
     if (_mode == FLPROG_CAN_BUS_SILENT_MODE)
     {
-        enableSilentMode();
+        enableSilentMode(true);
+        begin(_retransmission);
         return;
     }
     if (_mode == FLPROG_CAN_BUS_SILENT_LOOPBACK_MODE)
     {
-        enableSilentLoopBack();
+        enableSilentLoopBack(true);
+        begin(_retransmission);
         return;
     }
     enableLoopBack(false);
+    begin(_retransmission);
 }
 
 /* Interrupt functions
@@ -1178,7 +1206,7 @@ void FLProgCanBusMessage::setData(uint8_t index, uint8_t value)
 
 void FLProgCanBusMessage::pool()
 {
-    if (_mode == FLPROG_CAN_BUS_MESSAGE_READ_MODE)
+    if ((_mode == FLPROG_CAN_BUS_MESSAGE_READ_MODE) || (_mode == FLPROG_CAN_BUS_MESSAGE_SPY_MODE))
     {
         readPool();
         return;
@@ -1188,20 +1216,27 @@ void FLProgCanBusMessage::pool()
 
 void FLProgCanBusMessage::readPool()
 {
-
     _hasNewData = false;
     if (!_cunBus->hasNewReadMessage())
     {
         return;
     }
     CAN_message_t *_readMessage = _cunBus->getReadMessage();
-    if (_readMessage->flags.extended != _message.flags.extended)
+    if (_mode == FLPROG_CAN_BUS_MESSAGE_SPY_MODE)
     {
-        return;
+        _message.flags.extended = _readMessage->flags.extended;
+        _message.id = _readMessage->id;
     }
-    if (_readMessage->id != _message.id)
+    else
     {
-        return;
+        if (_readMessage->flags.extended != _message.flags.extended)
+        {
+            return;
+        }
+        if (_readMessage->id != _message.id)
+        {
+            return;
+        }
     }
     _hasNewData = true;
     _message.timestamp = _readMessage->timestamp;
@@ -1236,6 +1271,7 @@ void FLProgCanBusMessage::sendPool()
 
 void FLProgCanBusMessage::checkNeedSend()
 {
+    
     if (_mode == FLPROG_CAN_BUS_MESSAGE_CHANGE_MODE)
     {
         return;
@@ -1248,4 +1284,26 @@ void FLProgCanBusMessage::checkNeedSend()
     {
         _isNeedSend = true;
     }
+}
+
+void FLProgCanBusMessage::setMode(uint8_t mode)
+{
+    if (mode > 4)
+    {
+        return;
+    }
+    _mode = mode;
+}
+
+void FLProgCanBusMessage::len(uint8_t value)
+{
+    if (value < 1)
+    {
+        return;
+    }
+    if (value > 8)
+    {
+        return;
+    }
+    _message.len = value;
 }

@@ -29,6 +29,7 @@
 #define FLPROG_CAN_BUS_MESSAGE_PERIODICALLY_MODE 1
 #define FLPROG_CAN_BUS_MESSAGE_CHANGE_PERIODICALLY_MODE 2
 #define FLPROG_CAN_BUS_MESSAGE_READ_MODE 3
+#define FLPROG_CAN_BUS_MESSAGE_SPY_MODE 4
 
 typedef struct CAN_message_t
 {
@@ -148,9 +149,12 @@ public:
 
     void baudRate(uint32_t baud);
     void mode(uint8_t mode);
+    void retransmission(bool value) { _retransmission = value; };
 
     uint32_t baudRate() { return _baud; };
     uint8_t mode() { return _mode; };
+    bool retransmission() { return _retransmission; };
+
     bool hasNewReadMessage() { return _hasNewMessage; };
     CAN_message_t *getReadMessage() { return &_readMessage; };
 
@@ -245,16 +249,22 @@ class FLProgCanBusMessage
 {
 public:
     FLProgCanBusMessage(FLProgCanBus *cunBus, uint32_t id, bool extended = false, uint8_t len = 8);
-    void setMode(uint8_t mode) { _mode = mode; };
+    void setMode(uint8_t mode);
     void setSendPeriod(uint32_t sendPeriod) { _sendPeriod = sendPeriod; };
     void send(bool value);
     void setData(uint8_t index, uint8_t value);
+    void id(uint32_t value) { _message.id = value; };
+    void extended(bool value) { _message.flags.extended = value; };
+    void len(uint8_t value);
 
     uint8_t getMode() { return _mode; };
     uint32_t getSendPeriod() { return _sendPeriod; };
     uint8_t getData(uint8_t index);
     bool hasNewData() { return _hasNewData; };
     CAN_message_t *message() { return &_message; };
+    uint32_t id() { return _message.id; };
+    bool extended() { return _message.flags.extended; };
+    uint8_t len() { return _message.len; };
 
     void pool();
 
