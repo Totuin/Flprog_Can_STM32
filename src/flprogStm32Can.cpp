@@ -1,21 +1,21 @@
 #include "flprogStm32Can.h"
 
-constexpr Baudrate_entry_t FLProgCanBus::BAUD_RATE_TABLE_48M[];
-constexpr Baudrate_entry_t FLProgCanBus::BAUD_RATE_TABLE_45M[];
+constexpr Baudrate_entry_t FLProgSTM32CanBus::BAUD_RATE_TABLE_48M[];
+constexpr Baudrate_entry_t FLProgSTM32CanBus::BAUD_RATE_TABLE_45M[];
 
-static FLProgCanBus *_CAN1 = nullptr;
+static FLProgSTM32CanBus *_CAN1 = nullptr;
 static CAN_HandleTypeDef hcan1;
 uint32_t test = 0;
 #ifdef CAN2
-static FLProgCanBus *_CAN2 = nullptr;
+static FLProgSTM32CanBus *_CAN2 = nullptr;
 static CAN_HandleTypeDef hcan2;
 #endif
 #ifdef CAN3
-static FLProgCanBus *_CAN3 = nullptr;
+static FLProgSTM32CanBus *_CAN3 = nullptr;
 static CAN_HandleTypeDef hcan3;
 #endif
 
-FLProgCanBus::FLProgCanBus(CAN_TypeDef *canPort, CAN_PINS pins, RXQUEUE_TABLE rxSize, TXQUEUE_TABLE txSize)
+FLProgSTM32CanBus::FLProgSTM32CanBus(CAN_TypeDef *canPort, CAN_PINS pins, RXQUEUE_TABLE rxSize, TXQUEUE_TABLE txSize)
 {
 
     if (_canIsActive)
@@ -51,7 +51,7 @@ FLProgCanBus::FLProgCanBus(CAN_TypeDef *canPort, CAN_PINS pins, RXQUEUE_TABLE rx
 }
 
 // Init and start CAN
-void FLProgCanBus::begin(bool retransmission)
+void FLProgSTM32CanBus::begin(bool retransmission)
 {
 
     // exit if CAN already is active
@@ -275,7 +275,7 @@ void FLProgCanBus::begin(bool retransmission)
     n_pCanHandle->Init.Mode = CAN_MODE_NORMAL;
 }
 
-void FLProgCanBus::setBaudRate(uint32_t baud)
+void FLProgSTM32CanBus::setBaudRate(uint32_t baud)
 {
 
     // Calculate and set baudrate
@@ -296,7 +296,7 @@ void FLProgCanBus::setBaudRate(uint32_t baud)
     HAL_CAN_ActivateNotification(n_pCanHandle, CAN_IT_TX_MAILBOX_EMPTY);
 }
 
-bool FLProgCanBus::write(CAN_message_t &CAN_tx_msg, bool sendMB)
+bool FLProgSTM32CanBus::write(CAN_message_t &CAN_tx_msg, bool sendMB)
 {
     bool ret = true;
     uint32_t TxMailbox;
@@ -348,7 +348,7 @@ bool FLProgCanBus::write(CAN_message_t &CAN_tx_msg, bool sendMB)
     return ret;
 }
 
-bool FLProgCanBus::read(CAN_message_t &CAN_rx_msg)
+bool FLProgSTM32CanBus::read(CAN_message_t &CAN_rx_msg)
 {
     bool ret;
     __HAL_CAN_DISABLE_IT(n_pCanHandle, CAN_IT_RX_FIFO0_MSG_PENDING);
@@ -357,7 +357,7 @@ bool FLProgCanBus::read(CAN_message_t &CAN_rx_msg)
     return ret;
 }
 
-bool FLProgCanBus::setFilter(uint8_t bank_num, uint32_t filter_id, uint32_t mask, IDE std_ext, uint32_t filter_mode, uint32_t filter_scale, uint32_t fifo)
+bool FLProgSTM32CanBus::setFilter(uint8_t bank_num, uint32_t filter_id, uint32_t mask, IDE std_ext, uint32_t filter_mode, uint32_t filter_scale, uint32_t fifo)
 {
     CAN_FilterTypeDef sFilterConfig;
 
@@ -397,7 +397,7 @@ bool FLProgCanBus::setFilter(uint8_t bank_num, uint32_t filter_id, uint32_t mask
     }
 }
 
-void FLProgCanBus::setMBFilter(CAN_BANK bank_num, CAN_FLTEN input)
+void FLProgSTM32CanBus::setMBFilter(CAN_BANK bank_num, CAN_FLTEN input)
 {
     CAN_FilterTypeDef sFilterConfig;
     sFilterConfig.FilterBank = uint8_t(bank_num);
@@ -413,7 +413,7 @@ void FLProgCanBus::setMBFilter(CAN_BANK bank_num, CAN_FLTEN input)
     HAL_CAN_ConfigFilter(n_pCanHandle, &sFilterConfig);
 }
 
-void FLProgCanBus::setMBFilter(CAN_FLTEN input)
+void FLProgSTM32CanBus::setMBFilter(CAN_FLTEN input)
 {
     CAN_FilterTypeDef sFilterConfig;
     uint8_t max_bank_num = 27;
@@ -443,26 +443,26 @@ void FLProgCanBus::setMBFilter(CAN_FLTEN input)
     }
 }
 
-bool FLProgCanBus::setMBFilterProcessing(CAN_BANK bank_num, uint32_t filter_id, uint32_t mask, IDE std_ext)
+bool FLProgSTM32CanBus::setMBFilterProcessing(CAN_BANK bank_num, uint32_t filter_id, uint32_t mask, IDE std_ext)
 {
     // just convert the MB number enum to bank number.
     return setFilter(uint8_t(bank_num), filter_id, mask, std_ext);
 }
 
-bool FLProgCanBus::setMBFilter(CAN_BANK bank_num, uint32_t id1, IDE std_ext)
+bool FLProgSTM32CanBus::setMBFilter(CAN_BANK bank_num, uint32_t id1, IDE std_ext)
 {
     // by setting the mask to 0x1FFFFFFF we only filter the ID set as Filter ID.
     return setFilter(uint8_t(bank_num), id1, 0x1FFFFFFF, std_ext);
 }
 
-bool FLProgCanBus::setMBFilter(CAN_BANK bank_num, uint32_t id1, uint32_t id2, IDE std_ext)
+bool FLProgSTM32CanBus::setMBFilter(CAN_BANK bank_num, uint32_t id1, uint32_t id2, IDE std_ext)
 {
     // if we set the filter mode as IDLIST, the mask becomes filter ID too. So we can filter two totally independent IDs in same bank.
     return setFilter(uint8_t(bank_num), id1, id2, AUTO, CAN_FILTERMODE_IDLIST, std_ext);
 }
 
 // TBD, do this using "setFilter" -function
-void FLProgCanBus::initializeFilters()
+void FLProgSTM32CanBus::initializeFilters()
 {
     CAN_FilterTypeDef sFilterConfig;
     // We set first bank to accept all RX messages
@@ -490,7 +490,7 @@ void FLProgCanBus::initializeFilters()
     HAL_CAN_ConfigFilter(n_pCanHandle, &sFilterConfig);
 }
 
-void FLProgCanBus::initializeBuffers()
+void FLProgSTM32CanBus::initializeBuffers()
 {
     if (isInitialized())
     {
@@ -511,7 +511,7 @@ void FLProgCanBus::initializeBuffers()
     initRingBuffer(rxRing, rx_buffer, sizeRxBuffer);
 }
 
-void FLProgCanBus::initRingBuffer(RingbufferTypeDef &ring, volatile CAN_message_t *buffer, uint32_t size)
+void FLProgSTM32CanBus::initRingBuffer(RingbufferTypeDef &ring, volatile CAN_message_t *buffer, uint32_t size)
 {
     ring.buffer = buffer;
     ring.size = size;
@@ -519,7 +519,7 @@ void FLProgCanBus::initRingBuffer(RingbufferTypeDef &ring, volatile CAN_message_
     ring.tail = 0;
 }
 
-bool FLProgCanBus::addToRingBuffer(RingbufferTypeDef &ring, const CAN_message_t &msg)
+bool FLProgSTM32CanBus::addToRingBuffer(RingbufferTypeDef &ring, const CAN_message_t &msg)
 {
     uint16_t nextEntry;
     nextEntry = (ring.head + 1) % ring.size;
@@ -538,7 +538,7 @@ bool FLProgCanBus::addToRingBuffer(RingbufferTypeDef &ring, const CAN_message_t 
 
     return (true);
 }
-bool FLProgCanBus::removeFromRingBuffer(RingbufferTypeDef &ring, CAN_message_t &msg)
+bool FLProgSTM32CanBus::removeFromRingBuffer(RingbufferTypeDef &ring, CAN_message_t &msg)
 {
     // check if the ring buffer has data available
     if (isRingBufferEmpty(ring) == true)
@@ -554,7 +554,7 @@ bool FLProgCanBus::removeFromRingBuffer(RingbufferTypeDef &ring, CAN_message_t &
     return (true);
 }
 
-bool FLProgCanBus::isRingBufferEmpty(RingbufferTypeDef &ring)
+bool FLProgSTM32CanBus::isRingBufferEmpty(RingbufferTypeDef &ring)
 {
     if (ring.head == ring.tail)
     {
@@ -564,7 +564,7 @@ bool FLProgCanBus::isRingBufferEmpty(RingbufferTypeDef &ring)
     return (false);
 }
 
-uint32_t FLProgCanBus::ringBufferCount(RingbufferTypeDef &ring)
+uint32_t FLProgSTM32CanBus::ringBufferCount(RingbufferTypeDef &ring)
 {
     int32_t entries;
     entries = ring.head - ring.tail;
@@ -576,7 +576,7 @@ uint32_t FLProgCanBus::ringBufferCount(RingbufferTypeDef &ring)
     return ((uint32_t)entries);
 }
 
-void FLProgCanBus::setBaudRateValues(CAN_HandleTypeDef *CanHandle, uint16_t prescaler, uint8_t timeseg1,
+void FLProgSTM32CanBus::setBaudRateValues(CAN_HandleTypeDef *CanHandle, uint16_t prescaler, uint8_t timeseg1,
                                      uint8_t timeseg2, uint8_t sjw)
 {
     uint32_t _SyncJumpWidth = 0;
@@ -698,7 +698,7 @@ void FLProgCanBus::setBaudRateValues(CAN_HandleTypeDef *CanHandle, uint16_t pres
     CanHandle->Init.Prescaler = _Prescaler;
 }
 
-void FLProgCanBus::calculateBaudrate(CAN_HandleTypeDef *CanHandle, int baud)
+void FLProgSTM32CanBus::calculateBaudrate(CAN_HandleTypeDef *CanHandle, int baud)
 {
     /* this function calculates the needed Sync Jump Width, Time segments 1 and 2 and prescaler values based on the set baud rate and APB1 clock.
     This could be done faster if needed by calculating these values beforehand and just using fixed values from table.
@@ -779,7 +779,7 @@ void FLProgCanBus::calculateBaudrate(CAN_HandleTypeDef *CanHandle, int baud)
     }
 }
 
-uint32_t FLProgCanBus::getAPB1Clock()
+uint32_t FLProgSTM32CanBus::getAPB1Clock()
 {
     RCC_ClkInitTypeDef clkInit;
     uint32_t flashLatency;
@@ -814,7 +814,7 @@ uint32_t FLProgCanBus::getAPB1Clock()
     return apb1Clock;
 }
 
-void FLProgCanBus::enableMBInterrupts()
+void FLProgSTM32CanBus::enableMBInterrupts()
 {
     if (n_pCanHandle->Instance == CAN1)
     {
@@ -834,7 +834,7 @@ void FLProgCanBus::enableMBInterrupts()
 #endif
 }
 
-void FLProgCanBus::disableMBInterrupts()
+void FLProgSTM32CanBus::disableMBInterrupts()
 {
     if (n_pCanHandle->Instance == CAN1)
     {
@@ -854,7 +854,7 @@ void FLProgCanBus::disableMBInterrupts()
 #endif
 }
 
-void FLProgCanBus::enableLoopBack(bool yes)
+void FLProgSTM32CanBus::enableLoopBack(bool yes)
 {
     if (yes)
     {
@@ -866,7 +866,7 @@ void FLProgCanBus::enableLoopBack(bool yes)
     }
 }
 
-void FLProgCanBus::enableSilentMode(bool yes)
+void FLProgSTM32CanBus::enableSilentMode(bool yes)
 {
     if (yes)
     {
@@ -878,7 +878,7 @@ void FLProgCanBus::enableSilentMode(bool yes)
     }
 }
 
-void FLProgCanBus::enableSilentLoopBack(bool yes)
+void FLProgSTM32CanBus::enableSilentLoopBack(bool yes)
 {
     if (yes)
     {
@@ -890,13 +890,13 @@ void FLProgCanBus::enableSilentLoopBack(bool yes)
     }
 }
 
-void FLProgCanBus::enableFIFO(bool status)
+void FLProgSTM32CanBus::enableFIFO(bool status)
 {
     // Nothing to do here. The FIFO is on by default. This is just to work with code made for Teensy FlexCan.
     (void)status;
 }
 
-void FLProgCanBus::pool()
+void FLProgSTM32CanBus::pool()
 {
     if (!_isInit)
     {
@@ -906,7 +906,7 @@ void FLProgCanBus::pool()
     _hasNewMessage = read(_readMessage);
 }
 
-void FLProgCanBus::init()
+void FLProgSTM32CanBus::init()
 {
     begin(_retransmission);
     setBaudRate(_baud);
@@ -914,7 +914,7 @@ void FLProgCanBus::init()
     _isInit = true;
 }
 
-void FLProgCanBus::baudRate(uint32_t baud)
+void FLProgSTM32CanBus::baudRate(uint32_t baud)
 {
     if (baud < 10000)
     {
@@ -932,7 +932,7 @@ void FLProgCanBus::baudRate(uint32_t baud)
     setBaudRate(_baud);
 }
 
-void FLProgCanBus::mode(uint8_t mode)
+void FLProgSTM32CanBus::mode(uint8_t mode)
 {
     if (mode > 3)
     {
@@ -946,7 +946,7 @@ void FLProgCanBus::mode(uint8_t mode)
     privateSetMode();
 }
 
-void FLProgCanBus::privateSetMode()
+void FLProgSTM32CanBus::privateSetMode()
 {
 
     if (_mode == FLPROG_CAN_BUS_LOOPBACK_MODE)
@@ -1156,154 +1156,3 @@ extern "C" void CAN3_TX_IRQHandler(void)
 }
 #endif
 
-//---------------------------------------------------------FLProgCanBusMessage----------------------------------------------------------
-FLProgCanBusMessage::FLProgCanBusMessage(FLProgCanBus *cunBus, uint32_t id, bool extended, uint8_t len)
-{
-    _message.id = id;
-    _message.flags.extended = extended;
-    _message.len = len;
-    _cunBus = cunBus;
-}
-
-void FLProgCanBusMessage::send(bool value)
-{
-    if (value)
-    {
-        if (!_sendOldValue)
-        {
-            _isNeedSend = true;
-        }
-    }
-    _sendOldValue = value;
-}
-
-uint8_t FLProgCanBusMessage::getData(uint8_t index)
-{
-    if (index > 7)
-    {
-        return 0;
-    }
-    return _message.buf[index];
-}
-
-void FLProgCanBusMessage::setData(uint8_t index, uint8_t value)
-{
-    if (index > 7)
-    {
-        return;
-    }
-    if (_message.buf[index] == value)
-    {
-        return;
-    }
-    _message.buf[index] = value;
-    if (_mode == FLPROG_CAN_BUS_MESSAGE_PERIODICALLY_MODE)
-    {
-        return;
-    }
-    _isNeedSend = true;
-}
-
-void FLProgCanBusMessage::pool()
-{
-    if ((_mode == FLPROG_CAN_BUS_MESSAGE_READ_MODE) || (_mode == FLPROG_CAN_BUS_MESSAGE_SPY_MODE))
-    {
-        readPool();
-        return;
-    }
-    sendPool();
-}
-
-void FLProgCanBusMessage::readPool()
-{
-    _hasNewData = false;
-    if (!_cunBus->hasNewReadMessage())
-    {
-        return;
-    }
-    CAN_message_t *_readMessage = _cunBus->getReadMessage();
-    if (_mode == FLPROG_CAN_BUS_MESSAGE_SPY_MODE)
-    {
-        _message.flags.extended = _readMessage->flags.extended;
-        _message.id = _readMessage->id;
-    }
-    else
-    {
-        if (_readMessage->flags.extended != _message.flags.extended)
-        {
-            return;
-        }
-        if (_readMessage->id != _message.id)
-        {
-            return;
-        }
-    }
-    _hasNewData = true;
-    _message.timestamp = _readMessage->timestamp;
-    _message.idhit = _readMessage->idhit;
-    _message.flags.overrun = _readMessage->flags.overrun;
-    _message.flags.reserved = _readMessage->flags.reserved;
-    _message.len = _readMessage->len;
-    _message.buf[0] = _readMessage->buf[0];
-    _message.buf[1] = _readMessage->buf[1];
-    _message.buf[2] = _readMessage->buf[2];
-    _message.buf[3] = _readMessage->buf[3];
-    _message.buf[4] = _readMessage->buf[4];
-    _message.buf[5] = _readMessage->buf[5];
-    _message.buf[6] = _readMessage->buf[6];
-    _message.buf[7] = _readMessage->buf[7];
-    _message.mb = _readMessage->mb;
-    _message.bus = _readMessage->bus;
-    _message.seq = _readMessage->seq;
-}
-
-void FLProgCanBusMessage::sendPool()
-{
-    checkNeedSend();
-    if (!_isNeedSend)
-    {
-        return;
-    }
-    _cunBus->write(_message);
-    _sendTime = millis();
-    _isNeedSend = false;
-}
-
-void FLProgCanBusMessage::checkNeedSend()
-{
-    
-    if (_mode == FLPROG_CAN_BUS_MESSAGE_CHANGE_MODE)
-    {
-        return;
-    }
-    if (_isNeedSend)
-    {
-        return;
-    }
-    if (flprog::isTimer(_sendTime, _sendPeriod))
-    {
-        _isNeedSend = true;
-    }
-}
-
-void FLProgCanBusMessage::setMode(uint8_t mode)
-{
-    if (mode > 4)
-    {
-        return;
-    }
-    _mode = mode;
-}
-
-void FLProgCanBusMessage::len(uint8_t value)
-{
-    if (value < 1)
-    {
-        return;
-    }
-    if (value > 8)
-    {
-        return;
-    }
-    _message.len = value;
-}
