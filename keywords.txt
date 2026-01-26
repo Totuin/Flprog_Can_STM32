@@ -1,0 +1,44 @@
+#######################################
+# Syntax Coloring Map
+#######################################
+#######################################
+# # Datatypes (KEYWORD1)
+#######################################
+FLProgSTM32CanBus	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+addToRingBuffer	KEYWORD2
+baudRate	KEYWORD2
+disableMBInterrupts	KEYWORD2
+enableFIFO	KEYWORD2
+enableLoopBack	KEYWORD2
+enableMBInterrupts	KEYWORD2
+enableSilentLoopBack	KEYWORD2
+enableSilentMode	KEYWORD2
+getReadMessage	KEYWORD2
+hasNewReadMessage	KEYWORD2
+mode	KEYWORD2
+pool	KEYWORD2
+read	KEYWORD2
+removeFromRingBuffer	KEYWORD2
+retransmission	KEYWORD2
+setFilter	KEYWORD2
+setMBFilter	KEYWORD2
+setMBFilterProcessing	KEYWORD2
+write	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+CAN1_RX0_IRQHandler	LITERAL1
+CAN1_RX0_IRQn	LITERAL1
+CAN1_TX_IRQHandler	LITERAL1
+CAN1_TX_IRQn	LITERAL1
+GPIO_AF9_CAN1	LITERAL1
+GPIO_SPEED_FREQ_VERY_HIGH	LITERAL1
+HAL_CAN_MODULE_ENABLED	LITERAL1
+STM32F0xx	LITERAL1
+STM32F3xx	LITERAL1
+STM32_CAN_H	LITERAL1
